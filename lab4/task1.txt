@@ -1,0 +1,37 @@
+> let factorial = (n) => n<=1 ? 1 : n * factorial(n-1)
+undefined
+> factorial(20)
+2432902008176640000
+> factorial.doc = "Fakultätsfunktion"
+'Fakultätsfunktion'
+> factorial.created = "26.08.2021"
+'26.08.2021'
+> factorial
+[Function: factorial] {
+  doc: 'Fakultätsfunktion',
+  created: '26.08.2021'
+}
+> factorial(5, 10, 20)
+120
+> let param = (a, b, c) => [a, b, c]
+undefined
+> param(1)
+[ 1, undefined, undefined ]
+> param(1, 2, 3, 4)
+[ 1, 2, 3 ]
+> let data = [10, 11, 12, 13, 14]
+undefined
+> param(42, ...data)
+[ 42, 10, 11 ]
+> let divmod = (m, n) => [Math.floor(m/n), m%n]
+undefined
+> let [div, rest] = divmod(17, 7)
+undefined
+> div + rest
+5
+> const prefix = (pre) => (text) => pre + text
+undefined
+> const mod = prefix("mod_") // mod ist nun die zurückgegebene Funktion (text) => 'mod_' + text
+undefined
+> mod("getData")
+'mod_getData'

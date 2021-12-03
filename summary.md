@@ -5,6 +5,46 @@ Links:
 * https://bartaz.github.io/ieee754-visualization
 * https://eloquentjavascript.net
 * https://devdocs.io
+* http://latentflip.com/loupe
+* https://insomnia.rest
+* https://gburkert.github.io/selectors
+* https://babeljs.io
+
+## Discovered Methods:
+* String.substring()
+* Object.keys()
+* Array.isArray()
+* array.reduce()
+* array.forEach()
+* array.filter()
+* array.map()
+
+## Todo:
+* codePointAt vs. charPointAt
+
+* wenn setTimeout mit 0 aufgerufen wird, kommt erst trotzdme erst danach, weil es wird ine ine Timeout liste gelegt und dann wird erst das ganze Script abgearbeitet bevor das setTimeout callback ausgeführt wird
+* globale funktionen sind wie setTimeout sind an global angehängt
+```js
+var promise = new Promise((resolve, reject) => { 
+  throw Error('fail') // fehler wird zuerst geworfen
+  resolve()
+})
+ 
+promise
+  .then (() => console.log('step1'))
+  .then (() => { throw Error('fail') })
+  .then (() => console.log('step2'))
+  .catch(() => console.log('catch1')) // läuft erst hier rein
+  .then (() => console.log('step3')) // dann hier weil auf das neue promise nix passiert
+  .catch(() => console.log('catch2')) // dann hier
+  .then (() => console.log('step4'))
+
+
+console.clear() // -> um konsole zu clearen
+```
+* Es gibt ein Objekt "globalThis" welches immer auf das globale Objekt zeigt
+* undefined -> variable wurde noch nicht initalisiert (z.B. let a)
+* Undefined vs Null : https://stackoverflow.com/questions/5076944/what-is-the-difference-between-null-and-undefined-in-javascript
 
 ## Node
 
@@ -20,11 +60,24 @@ Links:
 * ES3, ES4, ES5, ES6, ES7 (2016), ES2017, ES2018...
 * Babel erlaubt neues JavaScript in altes zu verwandeln
 
+## this
+* "use sctrict " kann auch in Funktionen verwendet werden anstatt global
+```js
+// prottypen können verändert werden
+Object.prototype.attr = 42
+
+// nun hat jedes Objekt dieses attr da alle den Objekt Prototypen besitzen
+{}.attr
+[].attr 
+
+```
+
 ## Funktionen
 
 * JavaScript ist nicht sehr strikt mit den Anzahl Argumenten
 * Funktion die keinen Return hat, liefert undefined
 * Es gibt Unterschiede zwischen normalen Funktionen und Lambda Funktionen (Pfeilsytax)
+* Pure Funktionen: Mathematische Definition von Funktion
 
 ```js
 let sqr = n => n * n // muss nicht geklammert werden da nur ein argument
@@ -42,6 +95,13 @@ console.log(square(10))
 // kann auch vorher aufgerufen werden
 function square (x) {
     return x*x
+}
+
+const prefix = (pre) => (text) => pre + text
+const prefix = function(pre) {
+  return function(text) {
+    pre + text;
+  }
 }
 ```
 
@@ -78,9 +138,15 @@ NaN == NaN // gibt false weil zwei Not a Numbers unterschiedlich sein könnten
 typeof undefined // undefined
 typeof null // object
 
+typeof 2 // 'number'
+typeof 2n // 'bigint'
+typeof '' // string
+
 // javascript has short-circuing heisst es werden nicht alle expressions evaluiert
 let value = a || 'user' // wenn a etwas enthält dann wird a abgefüllt ansonsten 'user'
                         // da '' als false interpretiert wird muss er den rechten teil evaluieren
+
+if (!'') console.log(true) // gibt true aus, weil '' als false interpretiert wird
 
 ```
 
@@ -138,9 +204,18 @@ obj.surname = 'Rudin'
 delete obj.name
 'surname' in obj // true
 
+student4 = {age: 25, age: 26} // ergibt {age: 26}, falls Element doppelt vorkommt, dann wird einfach das letzte Element genommen
 ```
 
 Arrays:
+```js
+// array ähnliche objekte
+let istArray = [1,2,3]
+let wieArray = {0:1,1:2,2:3, length:3} // wieArray ist ein Array-Ähnliches Objekt
+
+Array.from(wieArray) // liefert echtes Array von wieArray
+
+```
 
 Wertetypen:
 

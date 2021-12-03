@@ -1,0 +1,41 @@
+> let student1 = { name: "Bob", age: 21, grades: [4.5, 5.0, 4.5, 5.5] }    
+undefined                                                                  
+> let student2 = student1                                                  
+undefined                                                                  
+> let student3 = Object.assign({}, student1)                               
+undefined                                                                  
+> let student4 = {...student1}                                             
+undefined                                                                  
+> [typeof student1, typeof student1.grades, Array.isArray(student1.grades)]
+[ 'object', 'object', true ]                                               
+> student1.age = 25                                                        
+25                                                                         
+> [student1, student2, student3, student4].map(s => s.age)                 
+[ 25, 25, 21, 21 ]                                                           // hier werden beide angepasst da student1 und student2 die gleiche referenz besitzen
+> student1.grades[3] = 6.0                                                 
+6                                                                          
+> [student1, student2, student3, student4].map(s => s.grades)              
+[                                                                            // hier werden alle arrays angepasst, die referenz des array objektes bei allen die gleiche ist
+  [ 4.5, 5, 4.5, 6 ],                                                      
+  [ 4.5, 5, 4.5, 6 ],                                                      
+  [ 4.5, 5, 4.5, 6 ],                                                      
+  [ 4.5, 5, 4.5, 6 ]                                                       
+]                                                                          
+> student4.grades[6] = 3.0                                                 
+3                                                                          
+> student4.grades.length                                                   
+7                                                                           // grades ist hier nun 7, weil man an der position 6 ein element eingefügt hat und sich der array automatisch vergrössert
+> const birthday = (stud) => ({...stud, age: stud.age+1})                  
+undefined                                                                  
+> birthday(student3)                                                       
+{                                                                          
+  name: 'Bob',                                                              // age wird hier überschrieben, weil es doppelt vorkommt und es wird immer das letzte element genommen
+  age: 22,                                                                 
+  grades: [ 4.5, 5, 4.5, 6, <2 empty items>, 3 ]                           
+}                                                                          
+> student3 = birthday(student3)                                             
+{                                                                          
+  name: 'Bob',                                                             
+  age: 22,                                                                 
+  grades: [ 4.5, 5, 4.5, 6, <2 empty items>, 3 ]                           
+}                                                                          
