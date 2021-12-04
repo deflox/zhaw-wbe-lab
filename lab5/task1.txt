@@ -1,0 +1,41 @@
+> let F = function (n) { this.a = n }
+undefined
+> let f = function () { return this.a }
+undefined
+> let fs = function () { "use strict"; return this.a }
+undefined
+> let value = new F(12)
+undefined
+> value.a
+12
+> f()
+undefined
+> fs()
+Uncaught TypeError: Cannot read properties of undefined (reading 'a')
+    at fs (REPL3:1:50)
+> fs.call({ a: 11, b: 22 })
+11
+> F(99)
+undefined
+> a
+99
+> let obj = Object.create({ f })
+undefined
+> obj
+{}
+> obj.a = "yeah"
+'yeah'
+> obj
+{ a: 'yeah' }
+> obj.f()
+'yeah'
+
+
+Wie sind die unterschiedlichen Ergebnisse bei den Aufrufen von f() und fs() zu erklären? 
+- Da bei fs() "use strict"; verwendet wird, zeigt this nicht auf das globale Objekt.
+
+Warum ist es keine gute Idee, die Funktion F ohne new aufzurufen?
+- Weil das Argument dann als a Attribut im globalen Objekt gesetzt wird.
+
+Das Objekt obj enthält nur ein Attribut a. Warum kann obj.f() aufgerufen werden?
+- Weil das Objekt mit "Object.create()" erstellt wurde, was das mitgegebene Objekt als Prototyp des resultierenden Objektes setzt

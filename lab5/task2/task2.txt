@@ -1,0 +1,2 @@
+Sehen Sie sich die Datei package.json sowie die ganze Verzeichnisstruktur des Projekts an. Wozu dient das Verzeichnis node_modules?
+- Im Verzeichnis node_modules befinden sich die Abhängigkeiten des Projektes.

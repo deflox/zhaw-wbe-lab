@@ -18,9 +18,13 @@ Links:
 * array.forEach()
 * array.filter()
 * array.map()
+* Object.getOwnPropertyNames
+* Object.getPrototypeOf(obj)
+* Object.create()
 
 ## Todo:
 * codePointAt vs. charPointAt
+* difference between falsey and false
 
 * wenn setTimeout mit 0 aufgerufen wird, kommt erst trotzdme erst danach, weil es wird ine ine Timeout liste gelegt und dann wird erst das ganze Script abgearbeitet bevor das setTimeout callback ausgeführt wird
 * globale funktionen sind wie setTimeout sind an global angehängt

@@ -1,3 +1,26 @@
+function findTag(input) {
+    if (typeof input !== 'string') return undefined;
+
+    let start = -1
+    let end = -1
+    for (let i = 0; i < input.length; i++) {
+        if (input[i] === '<') start = i
+        if (input[i] === '>') {
+            end = i
+            break
+        }
+    }
+
+    if (start != -1 && end != -1) {
+        return input.substring(start+1,end)
+    }
+}
+
+let fibonacci = (n) => { 
+    if (n < 2) return n 
+    else return fibonacci(n-1) + fibonacci(n-2) 
+}
+
 function equal(a,b) {
     if (a === b) return true
 
@@ -22,11 +45,4 @@ function equal(a,b) {
     return false
 }
 
-console.log('equal(16, 16) :', equal(16, 16))
-console.log('equal("hi", "hi") :', equal("hi", "hi"))
-console.log('equal({}, {}) :', equal({}, {})) // needs to be equal because the contents are not different but the reference is
-console.log('equal({a:1, b:2}, {b:2, a:1}) :', equal({a:1, b:2}, {b:2, a:1}))
-console.log('equal({a:1, b:2}, {c:3, b:2, a:1}) :', equal({a:1, b:2}, {c:3, b:2, a:1}))
-console.log('equal({a:{}}, {a:{}}) :', equal({a:{}}, {a:{}}))
-let emptyObj = {}
-console.log('equal({a:emptyObj}, {a:emptyObj}) :', equal({a:emptyObj}, {a:emptyObj}))
+module.exports = {findTag,fibonacci,equal}
