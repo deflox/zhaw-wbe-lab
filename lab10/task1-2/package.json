@@ -1,0 +1,14 @@
+{
+  "name": "wbe-lab10-task1-2",
+  "version": "1.0.0",
+  "description": "Project for lab 7 task 1 and 2.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.2"
+  }
+}
