@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vier gewinnt</title>
+  <link rel="stylesheet" href="style.css">
+
+  <script>
+
+    const red = {symbol: 'r', className: 'red'}
+    const blue = {symbol: 'b', className: 'blue'}
+
+    let state = {
+      nextColor: red.symbol,
+      board: [
+        [ '', '', '', '', '', '', '' ],
+        [ '', '', '', '', '', '', '' ],
+        [ '', '', '', '', '', '', '' ],
+        [ '', '', '', '', '', '', '' ],
+        [ '', '', '', '', '', '', '' ],
+        [ '', '', '', '', '', '', '' ],
+      ]
+    }
+
+    function elt(type, attrs, ...children) {
+      let node = document.createElement(type)
+      for (a in attrs) {
+        node.setAttribute(a, attrs[a])
+      }
+      for (let child of children) {
+        if (typeof child != "string") node.appendChild(child)
+        else node.appendChild(document.createTextNode(child))
+      }
+      return node
+    }
+
+    function renderBoard() {
+      let board = document.querySelector('.board')
+      board.innerHTML = ''
+
+      let boardWidth = state.board[0].length
+      for (let i = 0; i < state.board.length; i++) {
+        for (let z = 0; z < state.board[i].length; z++) {
+          let field = elt('div', {'class': 'field', 'id': boardWidth*i+z})
+          if (state.board[i][z] !== '') {
+            let color = state.board[i][z] === red.symbol ? red.className : blue.className
+            field.appendChild(elt('div', {'class': `${color} piece`}))
+          }
+          board.appendChild(field)
+        }
+      }
+    }
+
+    function registerEventListeners() {
+      document.querySelector('.board').addEventListener('click', e => {
+        let element = e.target
+        if ('field' !== element.className) return
+
+        let n = Number(element.id)
+        let posX = n % state.board[0].length
+
+        if (state.board[0][posX] !== '') return // no space left in column
+        for (let i = state.board.length - 1; i >= 0; i--) {
+          if (state.board[i][posX] === '') {
+            state.board[i][posX] = state.nextColor; break
+          }
+        }
+
+        console.log(state.board)
+
+        state.nextColor = state.nextColor === red.symbol ? blue.symbol : red.symbol
+        renderBoard()
+      })
+      document.querySelector('.reset').addEventListener('click', e => {
+        state.board = Array(6).fill('').map(el => Array(7).fill(''))
+        renderBoard()
+      })
+    }
+
+  </script>
+
+
+</head>
+<body>
+
+  <button class="reset">Reset Game</button>
+  <div class="board"></div>
+
+  <script>
+    renderBoard()
+    registerEventListeners()
+  </script>
+
+</body>
+</html>
