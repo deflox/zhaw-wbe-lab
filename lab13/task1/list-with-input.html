@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <title>List App</title>
+
+  <style>
+    body {
+      padding-top: 20px;
+      background-color: #16a085;
+    }
+    #root {
+      padding: 20px 0;
+      background-color: #e74c3c;
+      font-family: Comic Sans MS;
+      width: 700px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    button {
+      display: block;
+      margin: 0 auto;
+      margin-top: 10px;
+    }
+    ul {padding: 0}
+    li {
+      list-style-type: none;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script type="module">
+
+    import { render, useState } from "./lib/suiweb.js";     
+
+    const App = () => {
+      let [list, setState] = useState("list", 1, [])
+      
+      const add = () => {
+        list.push(document.getElementById('list-input').value)
+        document.getElementById('list-input').value = ""
+        setState(() => list)
+      }
+
+      const del = () => {
+        list = []
+        setState(() => list)
+      }
+
+      const check = e => {
+        const expression = /^-?\d+$/
+        if (!expression.test(e.target.value)) 
+          document.getElementById('list-input').value = e.target.value.slice(0, e.target.value.length-1)
+      }
+
+      const List = () => {
+        return ([
+          'ul', ...list.map(e => ['li', e])
+        ])
+      }
+
+      return (
+        ['div', 
+          ['h1', '😎🤔🤡 Super Cool List App 🤡🤔😎'],
+          ['input', {'type': 'text', id: 'list-input', oninput: check}],
+          ['button', { onclick: add }, 'Save'],
+          ['button', { onclick: del }, 'Delete'],
+          ['h2', 'List Output:'],
+          [List]
+        ]
+      )
+    }
+
+    const element = [App]
+
+    const container = document.getElementById("root")
+    render(element, container)
+
+  </script>
+
+</body>
+</html>
