@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vier gewinnt</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="suiweb.js"></script>
+  <script src="immutable.js"></script>
+
+  <script>
+
+    const red = {symbol: 'r', className: 'red'}
+    const blue = {symbol: 'b', className: 'blue'}
+
+    let state = {
+      nextColor: red.symbol,
+      winner: undefined,
+      board: [
+        [ '', '', '', '', '', '', '' ],
+        [ '', '', '', '', '', '', '' ],
+        [ '', '', '', '', '', '', '' ],
+        [ '', '', '', '', '', '', '' ],
+        [ '', '', '', '', '', '', '' ],
+        [ '', '', '', '', '', '', '' ],
+      ]
+    }
+
+    let counter = 0 // unfortuantely my whole logic is based on ids assigned to the fields
+                    // I could not figure out how to pass more than one argument to the Field function
+                    // so the counter is defined globally here
+
+    let boardSequence = []
+
+    // components
+
+    const App = () => [Board, {board: state.board}] 
+
+    const Board = ({board}) => {
+      let flatBoard = [].concat(...board)
+      let fields = flatBoard.map((type) => [Field, {type}])
+      return (
+        ["div", {className: "board"}, ...fields]
+      )
+    }
+
+    const Field = ({type}) => {
+      let color = {r: red.className, b: blue.className}[type]
+      let piece = color ? ["div", {className: "piece "+color}] : ""
+      return (
+        ["div", {className: "field", id: counter++}, piece]
+      )
+    }
+
+    // functions
+
+    function connect4Winner(color, lastPosX, lastPosY) {
+      other = color === red.symbol ? blue.symbol : red.symbol
+
+      let c = 0
+      for (let i = 0; i < state.board[lastPosY].length; i++) {
+        if (state.board[lastPosY][i] === color && ++c === 4) return color
+        else if (state.board[lastPosY][i] === other) c = 0
+      }
+      
+      c = 0
+      for (let i = 0; i < state.board.length; i++) {
+        if (state.board[i][lastPosX] === color && ++c === 4) return color
+        else if (state.board[i][lastPosX] === other) c = 0
+      }
+
+      let yMax = state.board.length
+      let xMax = state.board[0].length
+
+      c = 0
+      let [yStart1,xStart1] = lastPosX >= lastPosY ? [0,lastPosX-lastPosY] : [lastPosY-lastPosX,0]
+      for (let x = xStart1, y = yStart1; x < xMax && y < yMax; x++, y++) {
+        if (state.board[y][x] === color && ++c === 4) return color
+        else if (state.board[y][x] === other) c = 0
+      }
+
+      c = 0
+      let [yStart2,xStart2] = lastPosX+lastPosY > yMax-2 ? [yMax-1,lastPosX-(yMax-1-lastPosY)] : [lastPosY+lastPosX,0]
+      for (let x = xStart2, y = yStart2; x < xMax && y >= 0; x++, y--) {
+        if (state.board[y][x] === color && ++c === 4) return color
+        else if (state.board[y][x] === other) c = 0
+      }
+
+      return undefined
+
+    }
+
+    function renderBoard() {
+      const app = document.querySelector(".app")
+      counter = 0
+      render([App], app)
+      return app
+    }
+
+    function registerEventListeners(board) {
+
+      document.querySelector('.app').addEventListener('click', e => {
+        let element = e.target
+        if ('field' !== element.className) return
+        if (undefined !== state.winner) return
+
+        let n = Number(element.id)
+        let posX = n % state.board[0].length
+        let posY = -1
+
+        if (state.board[0][posX] !== '') return // no space left in column
+        for (let i = state.board.length - 1; i >= 0; i--) {
+          if (state.board[i][posX] === '') {
+            posY = i
+
+            let updatedRow = setInList(state.board[posY], posX, state.nextColor)
+            let updatedBoard = setInList(state.board, posY, updatedRow)
+            
+            boardSequence.push(state.board)
+            state.board = updatedBoard
+
+            break
+          }
+        }
+
+        state.winner = connect4Winner(state.nextColor, posX, posY)
+        if (typeof state.winner !== 'undefined') {
+          let label = state.winner === red.symbol ? red.className : blue.className
+          document.querySelector('.winner').innerHTML = `The winner is: ${label}`
+        }
+
+        state.nextColor = state.nextColor === red.symbol ? blue.symbol : red.symbol
+        renderBoard()
+
+      })
+
+      document.querySelector('.save').addEventListener('click', e => {
+        if (undefined !== state.winner) return // avoid saving when winner is already known
+
+        fetch('api/data/board?api-key=c4game', {
+          method: 'PUT',
+          headers: { 'Content-type': 'application/json' },
+          body: JSON.stringify(state.board)
+        })
+      })
+
+      document.querySelector('.load').addEventListener('click', e => {
+        fetch('api/data/board?api-key=c4game', {
+          method: 'GET'
+        })
+        .then(response => response.json())
+        .then(json => {
+          state.board = json
+          renderBoard()
+        })          
+      })
+
+      document.querySelector('.reset').addEventListener('click', e => {
+        document.querySelector('.winner').innerHTML = ''
+        state.board = Array(6).fill('').map(el => Array(7).fill(''))
+        state.winner = undefined
+        renderBoard()
+      })
+
+      document.querySelector('.undo').addEventListener('click', e => {
+        if (state.winner !== undefined) return
+        if (boardSequence.length !== 0) state.board = boardSequence.pop()
+        renderBoard()
+      })
+
+    }
+
+  </script>
+
+
+</head>
+<body>
+
+  <div class="buttons">
+    <button class="save">Save</button>
+    <button class="load">Load</button>
+    <button class="reset">Reset</button>
+    <button class="undo">Undo</button>
+    <div class="winner"></div>
+  </div>
+
+  <div class="app"></div>
+
+  <script>
+    renderBoard()
+    registerEventListeners()
+  </script>
+
+</body>
+</html>
