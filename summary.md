@@ -7,6 +7,7 @@
 * https://insomnia.rest
 * https://gburkert.github.io/selectors
 * https://babeljs.io
+* http://latentflip.com/loupe
 
 # MLDM Links
 * String Functions: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String
@@ -330,9 +331,152 @@ let o5 = {a:1,b:2,c:3}
 let f1 = ({a,b}) => a*b
 f1(o5) // 2 (wegen 1*2)
 
-// TODO: this
-// this bezieht sich normalerweise auf das Objekt
+// Ein Objekt kann ohne Angabe eines Attributes mit einer Variable initalisiert werden
+let type = 'white'
+let o6 = { type } // { type: 'white' }
+```
 
+## ```this```
+* this bezieht sich auf das aktuelle Objekt
+* Bedeutung ist abhängig davon, wo es herkommt: Methodenaufruf, Funktionsaufruf, apply, call oder bind, Konstruktoraufruf
+```js
+// Methodenaufruf
+let o1 = {
+  type: 'white',
+  speak: function(line) { console.log(`The ${this.type} rabbit says: ${line}`) }
+}
+o1.speak('I hate my life.') // The white rabbit says: I hate my life.
+
+// Funktionsaufruf
+// this bezieht sich hier auf das globale Objekt (oder window in Browser)
+// wird verhindert mittels "use strict" am Anfang oder in der Funktion
+function speak(line) {
+  console.log(`The ${this.type} rabbit says: ${line}`) 
+}
+speak('I hate my life.') // The undefined rabbit says: I hate my life.
+
+// call und apply
+let o2 = { type: 'white' }
+speak.call(o2, 'I hate my life.') // zweites Argument: Funktionsargumente
+speak.apply(o2, ['I hate my life.']) // zweites Argument: Array mit Argumenten
+
+// bind
+let newSpeak = speak.bind(o2) // neue Instanz mit gebundenem this wird erzeugt
+newSpeak('I hate my life.')
+```
+* Arrowfunktionen: ```this``` bezieht sich auf den umgebenen Gültigkeitsbereich
+```js
+// in diesem Beispiel wird auf das this im Gültigkeitsbereich der Funktion zugegriffen
+function normalize() {
+  console.log(this.coords.map(e => e / this.length)) // [ 0, 0.4, 0.6 ]
+  console.log(this.coords.map(function(e) { return e / this.length })) // [ NaN, NaN, NaN ]
+}
+
+normalize.call({coords: [0, 2, 3], length: 5})
+```
+
+## Prototypen
+* Prototypen definieren verschiedene Fallback Attribute und Methoden, die immer vorhanden sind, auch wenn das Objekt leer ist
+```js
+// Object.getPrototypeOf()
+Object.getPrototypeOf({}) == Object.prototype         // true
+Object.getPrototypeOf([]) == Array.prototype          // true
+Object.getPrototypeOf(() => {}) == Function.prototype // true
+
+// Object.create()
+// kreiert ein Objekt mit dem mitgegeben Prototype
+let o1 = Object.create({hello:'world'})
+Object.getPrototypeOf(o1) // {hello:'world'}
+```
+## Konstruktoren
+* Mittels Konstruktoren kann ein neues Objekt mit ```new``` erzeugt werden wobei ```this``` dann direkt aufs neue Objekt zeigt
+* Konstruktoren sollten immer gross geschrieben werden
+```js
+function Person(name) {
+  this.name = name
+}
+
+// es wird automatisch ein Person.prototype erstellt
+// jede erstellte Person erbt nun die Attribute von Person.prototype
+// auf Person.prototype gibt es ein constructor Attribut, dass auf die Person zeigt
+let p = new Person('James')
+Object.getPrototypeOf(p) == Person.prototype // true
+Person.prototype.constructor == Person       // true
+
+// es kann nun zum Beispiel auf dem Person.prototype eine toString Methode
+// erstellt werden, dann hat jede Person eine toString Methode
+Person.prototype.toString = function() { console.log(`Name of the person: ${this.name}`) }
+```
+## Vererbung mit Prototypen
+* Im Beispiel soll "Employee" von Person erben
+* Dazu wird der Employee.prototype mit "new Person()" ersetzt
+* Und zusätzlich wird dann auf dem Employee.prototype das Konstruktor Attribut auf "Employee" gesetzt
+```js
+function Person(name) {
+  this.name = name
+}
+function Employee(name, salary) {
+  Person.call(this, name) // Aufruf des Konstruktors in Person
+  this.salary = salary
+}
+
+this.prototype = new Person()
+Employee.prototype.constructor = Employee
+
+let emp = new Employee('James', 7000)
+```
+
+<img src="images/prototype_vererbung.png" width="500">
+
+## Klassensytax
+* Syntactic Sugar für Prototype Vererbung seit ES6
+```js
+class Person {
+  constructor(name) {
+    this.name = name
+  }
+  toString() {
+    return `Person with name ${this.name}`
+  }
+}
+
+class Employee extends Person {
+  constructor(name, salary) {
+    super(name)
+    this.salary = salary
+  }
+}
+
+let emp = new Employee('James', 7000)
+
+// getter und setter
+class HourlyEmployee extends Employee {
+  constructor(name, hourlySalary) {
+    super(name, hourlySalary)
+    this.hours = 0
+  }
+
+  get workedHours() { return this.hours }
+  set wokredHours(hours) { this.hours += hours }
+}
+
+let hemp = new HourlyEmployee('Leo', 30)
+hemp.wokredHours = 10
+hemp.wokredHours = 10
+hemp.wokredHours = 5
+console.log(hemp.workedHours) // 25
+
+// funktioniert auch bei normalen Objekten
+const language = {
+  set current(name) {
+    this.history.push(name)
+  },
+  history = []
+}
+
+language.current = 'DE'
+language.current = 'FR'
+console.log(language.history) // ['DE', 'FR']
 ```
 
 ## Arrays
@@ -450,3 +594,479 @@ export { name, draw }
 /* other js file */
 import { name, draw } from './modules/square.js'
 ```
+
+# File-API
+TODO: Maybe?
+
+# Async Programming
+* JavaScript-Code wird in einem Thread ausgeführt
+* Ablauf:
+  * Script wird ausgeführt mit Funktionsaufrufen -> Callstack
+  * Callbacks von asynchronen Operationen werden in Event Queue abgelegt
+  * Sobald Stack leer: Übergang in Event Loop bis Event Queue leer
+
+## Event Loop
+* Annahme: Es gibt nur eine Event Queue (praktisch gibt es mehrere)
+
+<img src="images/event_loop.png">
+
+* Timer:
+  * Sind für Callbacks für Zeitgeber: ```setTimeout``` oder ```setInterval```
+  * Sortierte Liste (keine Queue) nach Zeitstempel
+  * Abbruch nach systemspezifischem Limit
+* Pending I/O:
+  * Aufgeschobene Callbacks von vorherigen Durchgängen (```pending_queue```), z.B. TCP Fehlermeldungen
+* Poll Phase
+  * Abarbeiten der ```watch_queue```, warten auf I/O Verbindungsanfragen
+  * Wartezeit abhängig vom Fullstand der ```check_queue``` oder nach systemspezifischem Limit
+* Check Phase
+  * Abarbeiten der ```check_queue``` z.B. Callbacks von ```setImmediate```
+* Close Phase
+  * Vearbeitung bestimmter close-Events (```close_queue```) z.B. ```socket.on('close', ...)```
+* nextTickQueue und Promises
+  * Sind nicht des Event Loops und werden so früh wie möglich abgearbeitet
+  * ```nextTickQueue```: Verarbeitet nextTick Events
+  * ````Promises```
+
+```js
+// Code wird zu einem späteren Zeitpunkt ausgeführt (entfernen mit clearTimeout)
+setTimeout(() => {
+  console.log('setTimeout')
+}, 5000) // nach 5 Sekunden
+
+// Callback wird alle n Sekunden in die Callback Queue eingeführt
+setInterval(() => {
+  console.log('setInterval')
+}, 5000) // alle 5 Sekunden
+
+// Für Callbacks, die direkt nach der Poll Phase ausgeführt werden sollen
+setImmediate(() => {
+  console.log('setImmediate')
+})
+
+// process.nextTick für möglichst frühe Ausführung
+// Beispiel unten: nexttick, immediate, timeout (da immediate direkt nach der poll_phase kommt)
+fs.readFile("nexttick.js", () => {
+  setTimeout(() => { console.log('timeout'); }, 0)
+  setImmediate(() => { console.log('immediate'); })
+  process.nextTick(() => { console.log('nexttick'); })
+})
+
+// anderes Beispiel: nexttick, timeout, immediate (da timeout im Event Loop zuerst kommt)
+setTimeout(() => { console.log('timeout'); }, 0)
+setImmediate(() => { console.log('immediate'); })
+process.nextTick(() => { console.log('nexttick'); })
+```
+
+## "Events" Modul
+* EventEmitter verwaltet Listen von Listenern zu bestimmten Events
+* Bei Auslösung der Events folgt synchron und in der Reihenfolge, wie sie hinzugefügt wurden
+* this referenziert die EventEmitter instanz
+```js
+const EventEmitter = require('events')
+const door = new EventEmitter()
+
+door.on('open', () => {
+  console.log('Door was opened')
+})
+door.on('open', (speed) => {
+  console.log(`Door was opened, speed: ${speed || 'unknown'}`)
+})
+
+door.emit('open')
+// Door was opened
+// Door was opened, speed: undefined
+
+door.emit('open', 'slow')
+// Door was opened
+// Door was opened, speed: slow
+```
+
+## Promises
+* Promises sind Platzhalter für einen Wert, der voraussichtlich erst später verfügbar sein wird
+* Mögliche Zustände: Pending (Ausgangszustand) -> Fulfilled (erfolgreich abgeschlossen) oder Rejected (ohne Erfolg abgeschlossen)
+* ```then``` und ```catch``` geben selbst wieder eine Promise zurück
+```js
+// Promise kann erstellt werden mit new Promise
+// Argument: Funktion, welche eine resolve und reject Methode als Argument enthält
+// Entweder kann nun von der inneren Funktion resolve oder reject aufgerufen werden
+
+let p1 = new Promise((resolve, reject) => {
+  setTimeout(resolve, 500)
+  setTimeout(reject, 300)
+})
+
+// hier wird "catch" ausgegeben, weil reject zuerst aufgerufen wird vom timeout
+p1
+.then(() => console.log('then'))
+.catch(() => console.log('catch'))
+
+// mit Promise.resolve() wird Promise direkt resolved
+// mit Promise.reject() wird Promise direkt rejected
+Promise.resolve('hello world').then((data) => console.log(data)) // hello world
+Promise.reject('hello world').catch((data) => console.log(data))
+
+// Beispiel mit Verkettung:
+var promise = new Promise((resolve, reject) => {
+  throw Error('fail')
+  resolve()
+})
+promise
+.then (() => console.log('step1'))
+.then (() => {throw Error('fail')})
+.then (() => console.log('step2'))
+.catch(() => console.log('catch1')) // 1. aufgrund von "throw Error('fail')"
+.then (() => console.log('step3'))  // 2. aufgrund von normaler Ausführung des Promises aus dem catch()
+.catch(() => console.log('catch2'))
+.then (() => console.log('step4'))  // 3. aufgrund von normaler Ausführung des Promises aus dem then()
+
+// Event-Loop Verarbeitung
+Promise.resolve().then(() => console.log('promise resolved'))
+setImmediate(() => console.log('set immediate'))
+process.nextTick(() => console.log('next tick'))
+setTimeout(() => console.log('set timeout'), 0)
+
+// next tick
+// promise resolved
+// set timeout
+// set immediate
+
+// mit Promise.all() kann auf die Erfüllung von mehreren Promises gewartet werden
+// mit Promise.race() kann auf die Erfüllung von mindestens einem Promise gewartet werden
+var p1 = new Promise((resolve, reject) => {
+  setTimeout(resolve, 200, 'first')
+})
+var p2 = new Promise((resolve, reject) => {
+  setTimeout(resolve, 400, 'second')
+})
+
+Promise.all([p1, p2])
+.then((data) => console.log(data)) // ['first', 'second'] (Promise erzeugt Array mit allen Resultaten)
+.catch(console.log)
+
+Promise.race([p1, p2])
+.then((data) => console.log(data)) // first
+.catch(console.log)
+```
+
+# JavaScript im Browser
+```html
+<!-- JavaScript Code importieren -->
+<script>alert('hello world')</script>
+<script src="code/hello.js"></script>
+<script type="module" src="code/date.js"></script>
+```
+* JavaScript Code ist im Browser eingeschränkt: z.B. kein Zugriff auf Filesystem, Zwischenablagen etc.
+* Wichtige vordefinierte Objekte im Browser:
+  * ```document```, ```window```, ```event```, ```history```, ```location```, ```navigator```
+```js
+// document
+// https://developer.mozilla.org/en-US/docs/Web/API/Document
+// Representiert die angezeigt Website, Einstieg ins DOM (Document Object Model)
+document.cookies      // Zugriff auf Cookies
+document.lastModified // Zeit der letzten Änderung
+document.links        // Verweise der Seite
+document.images       // Die Bilder der Seite
+document.body         // Liefert body Element
+
+// window
+// https://developer.mozilla.org/en-US/docs/Web/API/Window
+// Repräsentiert das Browserfenster und ist das globale Objekt im Browser
+// globalThis zeigt auf beiden Plattformen auf das globale Objekt
+window.document     // Zugriff aufs Dokument
+window.history      // Zugriff auf Historie
+window.innerHeight  // Höhe des Viewports
+window.pageYOffset  // vertikal gescrollte Pixel
+
+// navigator
+// https://developer.mozilla.org/en-US/docs/Web/API/Navigator
+// Repräsentiert den State und Identity des User Agents
+navigator.userAgent // 'Mozilla/5.0 (Windows NT 10.0; Wi...
+navigator.language  // de
+navigator.platform  // Windows
+navigator.onLine    // true
+
+// location
+// https://developer.mozilla.org/en-US/docs/Web/API/Location
+// Represäentiert die Location (URL)
+location.href     // https://duckduckgo.com
+location.protocol // https
+```
+
+## Document Object Model (DOM)
+* DOM ist ein Baum, dass jedes Element auf der Website beinhaltet
+* Jeder Knoten des Baumes entspricht einem Element auf der Website
+* Jeder Knoten besitzt ein nodeType Attribut:
+  * 1 -> Node.ELEMENT_NODE (Elementknoten)
+  * 3 -> Node.TEXT_NODE (Textknoten)
+  * 8 -> Node.COMMENT_NODE (Kommentaroknoten)
+* HTML-Elementobjekte sind spezieller als normale XML basierten Elementknoten (Elementobjekte)
+  * https://developer.mozilla.org/en-US/docs/Web/API/Node
+    * https://developer.mozilla.org/en-US/docs/Web/API/Element
+      * https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement
+
+
+### Elemente Abfragen / Auffinden
+```js
+// childNodes -> liefert Instanz von NodeList
+// liefert Instanz von NodeList mit allen Objekte die unter dem Element vorkommen
+document.getElementById('example').childNodes
+
+// children
+// liefert Instanz von HTMLCollection mit nur den obersten Objekten direkt unter dem abgefragten Objekt
+document.getElementById('example').children
+
+// diverse Möglichkeiten, um DOM abzufragen
+document.getElementById('example')
+document.getElementsByTagName('p')
+document.getElementsByClassName('example')
+
+// querySelector
+// liefert erstes passendes Objekt für gegebenen CSS-Selektor
+document.querySelector('p')
+
+// querySelectorAll
+// liefert alle Objekte für den gegebenen CSS-Selektor
+document.querySelectorAll('p')
+
+// className
+// liefert Klassennamen als normalen String
+document.getElementById('example').className
+
+// classList
+// liefert alle definierten Klassen als Array
+document.getElementById('example').classList
+```
+
+### Elemente hinzufügen / Dokument anpassen
+```js
+// document.createElement
+// erstellt ein neues HTML Element
+document.createElement('p')
+
+// document.createAttribute
+// Erstellt Objekt, dass das Attr Interface implementiert und mittels setAttributeNode() gesetzt werden kann
+let attr = document.createAttribute('style')
+attr.value = 'color:blue'
+let el = document.getElementById('example')
+el.setAttributeNode(attr)
+
+// document.createTextNode
+// Kreiert ein Node vom Typ TEXT_NODE
+let textNode = document.createTextNode('hello world')
+document.getElementById('example').appendChild(textNode)
+
+// <element>.setAttribute
+// auf einem Element kann ein Attribut gesetzt werden
+document.getElementById('example').setAttribute('style', 'color:red')
+
+// <element>.appendChild
+// dem Element wird das angegebene Element angehängt
+let p = document.createElement('p')
+p.innerText = 'Hello World'
+document.getElementById('example').append(p)
+
+// <element>.insertBefore
+// erlaubt das Einfügen eines Elementes vor dem anderen angegebenen Element
+let p2 = document.createElement('p')
+p.innerText = 'Hello World 2'
+document.getElementById('example').insertBefore(p, p2)
+
+// remove
+let el = document.getElementById('example')
+el.remove()
+```
+
+### Eigene Attribute
+```html
+<p data-id="1">Hello World</p>
+<p data-id="1">Hello World</p>
+```
+```js
+let pElements = document.getElementsByTagName('p')
+for (let pElement of Arrays.from(pElements)) {
+  console.log(pElement.dataset.id)
+}
+
+// 1
+// 2
+```
+
+### CSS und DOM
+```js
+// Style Anpassung
+let el = document.getElementById('example')
+// alle CSS Anweisungen sind in JavaScript mit Camel-Case anstatt mit Bindestrich
+el.style.fontFamily = 'Arial'
+
+// Attribute
+el.clientWidth  // Breite inkl. Padding
+el.clientHeight // Höhe inkl. Padding
+el.offsetWidth  // Breite inkl. Border (ohne margin)
+el.offsetHeight // Höhe inkl. Border (ohne margin)
+```
+
+## Event Handling
+* Es können Events auf Objekten registriert werden
+  * `click`: Listener reagieren auf click events
+  * `mousedown`, `mouseup`, `click`, `dblclick`, `mousemove`, `touchstart`, `touchmove`, `touched` 
+  * `keydown`: Drücken von Tasten (Zugriff auf Taste mit `e.key`)
+  * `keyup`: Lösen der Tasten
+    * Bei Tastatur Events werden diejenigen Elemente abgehört, die gerade den Fokus besitzen (z.B. für Input-Elemente das ausgewählte Feld)
+  * `scroll`: Für Scrollereignisse (mit `pageYOffset` und `pageXOffset` auf dem Event-Objekt)
+  * Event-Typen ohne Event-Propagation:
+    * `focus`, `blur`: Fokus erhalten/verlieren
+    * `load`: Seite wurde geladen (ausgelöst auf `window` und `document.body`)
+    * `beforeunload`: Bevor Seite verlassen wird
+```js
+// addEventListener
+// Event Listener auf Objekt hinzufügen (erstes Argument: Event-Typ, zweites Argument: Callback Funktion)
+let el = document.getElementById('example')
+el.addEventListener('click', function(e) {
+  console.log('click')
+})
+
+// removeEventListener
+// Event Listener von Objekt entfernen (erstes Argument: Event-Typ, zweites Argument: Callback Funktion)
+function click() { console.log('click') }
+el.addEventListener('click', click)
+el.removeEventListener('click', click)
+
+// on<event> : erlaubt direktes Registrieren von Event-Callbacks
+// Nachteil: nur eine Funktion möglich
+el.onclick = () => console.log('click')
+
+// target und currentTarget
+let el = document.getElementById('example')
+el.addEventListener('click', function(e) {
+  console.log(e.target)        // Element, auf welchem das Event ausgelöst wurde
+  console.log(e.currentTarget) // Element, auf welchem der Event-Listener registriert wurde
+})
+
+// preventDefault
+// verhindert das Default-Verhalten bei Events (zum Beispiel bei <a> Elementen)
+// <a href="https://duck.com">duck.com</a>
+document.querySelector('a').addEventListener(e => {
+  e.preventDefault() // Weiterleitung auf "duck.com" wird verhindert
+})
+```
+### Weitergabe von Events:
+* Events werden weiter nach oben gereicht, wenn das Parent-Objekt ebenfalls ein Event Listener registriert hat
+* Im Beispiel unten wird erst der Event Listener auf dem `<button>` Element ausgeführt und anschliessent auf dem `<p>` Element
+* Mittels `event.stopPropagation()` kann die Weiterreichung verhindert werden
+```html
+<p>A paragraph with a <button>button</button>.</p>
+```
+```js
+document.querySelector("p").addEventListener("mousedown", () => {
+  console.log("Handler for paragraph.")
+})
+document.querySelector("button").addEventListener("mousedown", event => {
+  console.log("Handler for button.")
+  if (event.button == 2) event.stopPropagation() // wird verhindern, sofern Klick von rechter Maustaste stammt
+})
+```
+
+## Bilder und Grafiken
+* SVG:
+  * Erlauben das Zeichen von Vektorgrafiken
+  * Beispiel für SVG:
+```html
+<p>Normal HTML here.</p>
+<svg xmlns="http://www.w3.org/2000/svg">
+  <circle r="50" cx="50" cy="50" fill="red"/>
+  <rect x="120" y="5" width="90" height="90"
+stroke="blue" fill="none"/>
+</svg>
+```
+* Canvas:
+  * Erlauben das Zeichnen von Pixelgrafiken
+  * Beispiel für Canvas (Zeichnung eines Dreiecks):
+```html
+<canvas></canvas>
+
+<script>
+  let cx = document.querySelector("canvas").getContext("2d")
+  cx.beginPath()
+  cx.moveTo(50, 10)
+  cx.lineTo(10, 70)
+  cx.lineTo(90, 70)
+  cx.fill()
+</script>
+```
+
+## Webstorage
+* Möglichkeiten: `Cookies` und `LocalStorage`
+* `Localstorage` bleibt nach Schliessen des Browser erhalten
+* Alternative für solange Browser/Tab geöffnet: `SessionStorage`
+* Speicherlimit pro Website (pro Domain): 5MB
+```js
+localStorage.setItem("username", "bkrt")
+console.log(localStorage.getItem("username")) // → bkrt
+localStorage.removeItem("username")
+```
+
+## Formulare
+* Ermöglichen Benutzereingaben im Web
+* `action` definiert den Punkt, an welchem der Formular Request gesendet werden soll
+* `action` kann auch leer sein, wenn Formular nicht abgesendet werden soll
+* `label` beschreibt das Formular-Element
+* Formular-Elemente: `text`, `password`, `checkbox`, `radio`, `url`, `email`, `range`, `date`, `search`
+* `disabled` verhindert die Eingabe von Text in Input-Element
+* Event-Typen: `change`, `input`, `keydown`, `keypress`, `keyup`, `submit`
+* Formulare werden mit einem Element mit `type="submit"` abgesendet
+```html
+<form action="/login" method="post">
+  <label for="username">Username:</label>
+  <input type="text" id="username">
+</form>
+```
+* Fokus:
+  * Element, das gerade Tastatureingaben aufnimmt
+  * Anpassbar mit Methoden `focus()` oder `blur()` auf Input-Element
+  * Abfragbar mit `document.activeElement`
+  * Reihenfolge des Fokus kann mittels `tabindex` gesteuert werden
+
+## Cookies
+* HTTP ist als Zustandslos konzipiert, Cookies dienen zur Speicherung von Informationen beim Client
+* Zugriff per JavaScript möglich (ausser HttpOnly-Flag ist gesetzt)
+```js
+// Abfrage der Cookies
+let allCookies = document.cookie
+```
+
+## Ajax und Fetch-API
+* Mittels Ajax ist es möglich, Daten ohne kompletten Reload der Seite nachzuladen
+* Mit Fetch-API sind Abfragen möglich
+* Attribute des `response` Objektes: `headers`, `status`
+* Same origin Policy erlaubt keinen Zugriff auf Daten von anderen Servern (aus Sicherheitsgründen)
+* Server kann Zugriff erlauben mit folgendem Header: `Access-Control-Allow-Origin: *`
+```js
+// Abfrage von API-Daten mit JSON
+fetch('api/data', {
+  method: 'GET'
+})
+.then(response => response.json())  // fetch Promise ist direkt erfüllt, daher liefert response.json() eine weitere Promise
+.then(json => {                     // das nächste Promise wird erfüllt, sobald die Response geparsed ist
+  // ...
+})
+
+// Abfrage von API-Daten als reiner Text
+// Abfrage von API-Daten mit JSON
+fetch('api/data', {
+  method: 'GET'
+})
+.then(response => response.text())
+.then(text => {
+  // ...
+})
+
+// PUT Abfrage an server
+fetch('api/data/update', {
+  method: 'PUT',
+  headers: { 'Content-type': 'application/json' },
+  body: JSON.stringify(obj)
+})
+``` 
+
+# UI-Bibliothek
