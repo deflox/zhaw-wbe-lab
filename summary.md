@@ -1,3 +1,57 @@
+- [TODO:](#todo)
+- [Links](#links)
+- [MLDM Links](#mldm-links)
+- [NodeJS](#nodejs)
+  - [REPL](#repl)
+- [Konsole](#konsole)
+- [Werte](#werte)
+  - [Zahlenwerte](#zahlenwerte)
+  - [Strings](#strings)
+- [```null``` und ```undefined```](#null-und-undefined)
+- [typeof](#typeof)
+- [Operatoren](#operatoren)
+  - [```==``` oder ```===```](#-oder-)
+- [Verzeigungen und Wiederholungen](#verzeigungen-und-wiederholungen)
+- [```var```, ```let```, ```const```](#var-let-const)
+- [Funktionen](#funktionen)
+- [Objekte](#objekte)
+  - [```this```](#this)
+  - [Prototypen](#prototypen)
+  - [Konstruktoren](#konstruktoren)
+  - [Vererbung mit Prototypen](#vererbung-mit-prototypen)
+  - [Klassensytax](#klassensytax)
+  - [Arrays](#arrays)
+  - [JSON](#json)
+- [Modulsystem](#modulsystem)
+  - [CommonJS](#commonjs)
+  - [ES6](#es6)
+- [File-API](#file-api)
+- [Async Programming](#async-programming)
+  - [Event Loop](#event-loop)
+  - ["Events" Modul](#events-modul)
+  - [Promises](#promises)
+- [JavaScript im Browser](#javascript-im-browser)
+  - [Document Object Model (DOM)](#document-object-model-dom)
+    - [Elemente Abfragen / Auffinden](#elemente-abfragen--auffinden)
+    - [Elemente hinzufügen / Dokument anpassen](#elemente-hinzufügen--dokument-anpassen)
+    - [Eigene Attribute](#eigene-attribute)
+    - [CSS und DOM](#css-und-dom)
+  - [Event Handling](#event-handling)
+    - [Weitergabe von Events:](#weitergabe-von-events)
+  - [Bilder und Grafiken](#bilder-und-grafiken)
+  - [Webstorage](#webstorage)
+  - [Formulare](#formulare)
+  - [Cookies](#cookies)
+  - [Ajax und Fetch-API](#ajax-und-fetch-api)
+- [Model-View-Controller](#model-view-controller)
+  - [Single Page Apps](#single-page-apps)
+- [UI-Bibliothek](#ui-bibliothek)
+  - [JSX](#jsx)
+  - [SJDON](#sjdon)
+
+# TODO:
+* element.innerHTML
+
 # Links
 * https://standardjs.com
 * https://bartaz.github.io/ieee754-visualization
@@ -1069,4 +1123,68 @@ fetch('api/data/update', {
 })
 ``` 
 
+# Model-View-Controller
+* Models:
+  * Repräsentieren anwendungsspezifische Daten und können Observer über Zustandsänderungen informieren
+* Views:
+  * Bilden Benutzerschnittstelle (HTML, CSS), können Models überwachen, kommunizieren aber nicht direkt
+* Controllers:
+  * Verarbeiten Eingaben wie Clicks usw.
+
+## Single Page Apps
+* Neuladen von Seiten vermeiden und Inhalte dynamisch nachladen mit Ajax und Rest
+
 # UI-Bibliothek
+* Komponentenbasiert, heisst UserInterface wird aus Komponenten zusammengefasst
+* Datengesteuert, heisst wir haben sozusagen eine Funktion, die erhält Daten und gibt die View zurück
+* Soll JSX und SJDOM unterstützen
+* UI-Elemente werden nicht bidirektional mit Model verbunden
+  * View bearbeitet keine Model-Daten
+  * MOdel modifiziert View
+
+## JSX
+* DOM Struktur wird von JSX deklarativ beschrieben
+* Mischung zwischen HTML und JavaScript
+* Ist kein JavaScript Code, sondern JavaScript mit XML Code
+* HTML-Tags sind mit kleinen Buchstaben geschrieben, eigene Komponenten mit grossem Anfangsbuchstaben
+* HTML Elemente haben die üblichen Attribute, ausser einigen Ausnahmen (className anstatt class)
+```js
+// einfache komponente "hello"
+// die runden Klammern sind nicht unbedingt notwendig ist konvention
+const Hello = () => (
+  <p>Hello World</p>
+)
+render( (<Hello />) ,document.getElementById('app'))
+
+// beispiel einer Liste
+// JavaScript code muss in {} eingefasst werden
+const List = ({data}) => (
+<ul>
+  { data.map(item => (<li key={item}>{item}</li>)) }
+</ul>
+)
+```
+
+## SJDON
+* Eigene Notation in purem JavaScript
+* Element als Array:
+  * Erstes Element: Komponentenname als String oder Funktionsname
+  * Danach folgt ohne Reihenfolge:
+    * Attribute des Elements falls Komponentenname als String
+    * oder Argumente der Funktion falls Funktion
+    * Text des Elements
+    * oder weiterer Array mit sub Elementen
+```js
+/* JSX */
+const element = (
+<div style="background:salmon">
+  <h1>Hello World</h1>
+  <h2 style="text-align:right">from SuiWeb</h2>
+</div>
+)
+/* SJDON */
+const element =
+  ["div", {style: "background:salmon"},
+  ["h1", "Hello World"],
+  ["h2", {style: "text-align:right"}, "from SuiWeb"] ]
+```
